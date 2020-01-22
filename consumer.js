@@ -6,7 +6,7 @@ exports.consume = async () => {
       channel.consume('kpb', async (msg) =>{
           let message = JSON.parse(msg.content)
           require('./controller/RutController').parse(message, channel)
-          channel.ack(msg)
+        //   channel.ack(msg)
       })
 
   } catch (error) {
