@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 const mongoSchema = mongoose.Schema({
+  idPenuyuluh: String,
   nik: String,
-  idKecamatan: String,
+  idDesa: String,
   tahun   : Number,
-  luasLahan: Number,
   idKios: Number,
   idPoktan: Number,
   statusVerf : {type: Number, default: 0},

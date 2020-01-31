@@ -10,7 +10,7 @@ exports.parse = (message, channel) => {
   })
 }
 
-const showRutPerkecamatanAll = async (idDesa) =>
+const showRutPerkecamatanAll = (idDesa) =>
   new Promise(async (resolve, reject) => {
     const tahunSekarang = new Date().getFullYear();
     RutModel
@@ -48,7 +48,7 @@ const showRutPerkecamatanAll = async (idDesa) =>
         if (res.length > 0) {
           let mainData = res[0]
           delete mainData._id
-          let dataPetani = Array.from(mainData.petani)
+          let dataPetani = mainData.petani
           // dataPetani.splice(30, 527)
           let dataRDKK = mainData.rdkk
           // let dataRUT = mainData.dataRUT
@@ -66,15 +66,18 @@ const showRutPerkecamatanAll = async (idDesa) =>
               idKios = rdkkFinal.retailer_id
               idPoktan = rdkkFinal.farmer_group_id
             }
+            // Object.assign(dataPerPetani, {
+            //   idKios: idKios,
+            //   nik: data.nik,
+            //   idPoktan: idPoktan
+            // })
             // console.log(dataPerPetani)
-            // dataBaru.push(dataPerPetani)
-            // return data.nik
-            // return dataPerPetani
-            // console.log(mt1)
-            // return parseData(mainData, data, rdkkFinal)
-            const mt1 = dataPerPetani.dataRUT[0]
-            const mt2 = dataPerPetani.dataRUT[1]
-            const mt3 = dataPerPetani.dataRUT[2]
+            // dataBaru.push(Object.assign(dataPerPetani, {
+            //   idKios: idKios,
+            //   nik: data.nik,
+            //   idPoktan: idPoktan
+            // }))
+            // console.log(dataPerPetani.petani.nik)
             return {
               nik: data.nik,
               idPenuyuluh: mainData.idPenyuluh,
@@ -83,42 +86,9 @@ const showRutPerkecamatanAll = async (idDesa) =>
               idPoktan: idPoktan,
               idKios: idKios,
               dataRUT: [
-                {
-                  masaTanam: mt1.masaTanam,
-                  jenisTanaman: mt1.jenisTanaman,
-                  subTotalSaprotan: mt1.subTotalSaprotan,
-                  subTotalGarapDanPemeliharaan: mt1.subTotalGarapDanPemeliharaan,
-                  subTotalBiayaUsahaTani: mt1.subTotalBiayaUsahaTani,
-                  subPendapatanKotor: mt1.subPendapatanKotor,
-                  subPrediksiPendapatan: mt1.subPrediksiPendapatan,
-                  totalPerMT: mt1.Number,
-                  kebutuhanSaprotan: getKebutuhanSaprotan(mt1.kebutuhanSaprotan),
-                  garapDanPemeliharaan: getGarapDanPemeliharaan(mt1.garapDanPemeliharaan)
-                },
-                {
-                  masaTanam: mt2.masaTanam,
-                  jenisTanaman: mt2.jenisTanaman,
-                  subTotalSaprotan: mt2.subTotalSaprotan,
-                  subTotalGarapDanPemeliharaan: mt2.subTotalGarapDanPemeliharaan,
-                  subTotalBiayaUsahaTani: mt2.subTotalBiayaUsahaTani,
-                  subPendapatanKotor: mt2.subPendapatanKotor,
-                  subPrediksiPendapatan: mt2.subPrediksiPendapatan,
-                  totalPerMT: mt2.Number,
-                  kebutuhanSaprotan: getKebutuhanSaprotan(mt2.kebutuhanSaprotan),
-                  garapDanPemeliharaan: getGarapDanPemeliharaan(mt2.garapDanPemeliharaan)
-                },
-                {
-                  masaTanam: mt3.masaTanam,
-                  jenisTanaman: mt3.jenisTanaman,
-                  subTotalSaprotan: mt3.subTotalSaprotan,
-                  subTotalGarapDanPemeliharaan: mt3.subTotalGarapDanPemeliharaan,
-                  subTotalBiayaUsahaTani: mt3.subTotalBiayaUsahaTani,
-                  subPendapatanKotor: mt3.subPendapatanKotor,
-                  subPrediksiPendapatan: mt3.subPrediksiPendapatan,
-                  totalPerMT: mt3.Number,
-                  kebutuhanSaprotan: getKebutuhanSaprotan(mt3.kebutuhanSaprotan),
-                  garapDanPemeliharaan: getGarapDanPemeliharaan(mt3.garapDanPemeliharaan)
-                }
+                dataPerPetani.dataRUT[0],
+                dataPerPetani.dataRUT[1],
+                dataPerPetani.dataRUT[2]
               ],
               totalBiayaUsahaTani: dataPerPetani.totalBiayaUsahaTani,
               pendapatanKotor: dataPerPetani.pendapatanKotor,
@@ -130,58 +100,10 @@ const showRutPerkecamatanAll = async (idDesa) =>
               }
             }
           })
-
-
-          // for (let i = 0; i < dataPetani.length; i++) {
-          //   let rdkk = dataRDKK.filter(r => {
-          //     return r.farmer_nik === dataPetani[i].nik
-          //   })
-          //   let rdkkFinal = rdkk.length < 1 ? null : rdkk[0]
-          //   const dataPerPetani = parseData(mainData, dataPetani[i], rdkkFinal)
-          //   let idKios = null
-          //   let idPoktan = null
-          //   if (rdkkFinal !== null) {
-          //     idKios = rdkkFinal.retailer_id
-          //     idPoktan = rdkkFinal.farmer_group_id
-          //   }
-          //   console.log(dataPerPetani)
-          //   // dataBaru.push(dataPerPetani)
-
-          // }
-
-          // console.log(dataPetani.length)
           resolve(dataBaru)
         }
       });
   });
-
-  const getKebutuhanSaprotan = (arr) => {
-    let data =  arr.map(res => {
-      return {
-        nama: res.nama,
-        harga: res.harga,
-        jumlah: res.jumlah,
-        id: res.id,
-        hargaSubsidi: res.hargaSubsidi,
-        subTotal: res.subTotal,
-        jatahSubsidi: res.jatahSubsidi,
-        jumlahNonSubsidi: res.jumlahNonSubsidi
-      }
-    })
-    return data
-  }
-
-  getGarapDanPemeliharaan = (arr) => {
-    let data = arr.map(res => {
-      return {
-        jenis: res.jenis,
-        harga: res.harga,
-        jumlah: res.jumlah,
-        satuan: res.satuan
-      }
-    })
-    return data
-  }
 
   const getLuasLahanPerMT = (data, mainData) => {
     let luasLahan
@@ -260,11 +182,8 @@ const showRutPerkecamatanAll = async (idDesa) =>
   }
 
   const parseData = (mainData, dataPetani, rdkk) => {
-      // mainData.petani = dataPetani
-      Object.assign(mainData, {
-        petani: dataPetani
-      })
-      mainData.rdkk = rdkk
+    mainData.petani = dataPetani
+    mainData.rdkk = rdkk
           let dataRUT = mainData.dataRUT
           let totalSaprotan = 0
           let totalGarapDanPemeliharaan = 0
@@ -306,7 +225,8 @@ const showRutPerkecamatanAll = async (idDesa) =>
                 hargaSubsidi: hargaSubsidi,
                 subTotal: totalBiayaPerPupuk,
                 jatahSubsidi: jatahSubsidi,
-                jumlahNonSubsidi: jumlahNonSubsidi < 0 ? 0 : jumlahNonSubsidi
+                jumlahNonSubsidi: jumlahNonSubsidi < 0 ? 0 : jumlahNonSubsidi,
+                luasLahan: luasLahan
               })
             
               totalPerMT += totalBiayaPerPupuk
@@ -339,7 +259,6 @@ const showRutPerkecamatanAll = async (idDesa) =>
             totalPanen.beras += berasPerMT
             let subTotalBiayaUsahaTani = totalPerMT + subTotalGarapDanPemeliharaan
             Object.assign(data, {
-              luasLahan: luasLahan,
               subTotalSaprotan: totalPerMT,
               subTotalGarapDanPemeliharaan: subTotalGarapDanPemeliharaan,
               subTotalBiayaUsahaTani: subTotalBiayaUsahaTani,
@@ -357,7 +276,5 @@ const showRutPerkecamatanAll = async (idDesa) =>
           })
           // delete mainData.rdkk
           // delete mainData.petani
-          // console.log(mainData)
-          // resolve(mainData)
           return mainData
-        }
+  }
