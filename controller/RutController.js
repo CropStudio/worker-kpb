@@ -1,20 +1,22 @@
 const RutModel = require('../models/RUT')
 const RutPetani = require('../models/RutPetani')
 exports.parse = (message, channel) => {
-  // console.log(message)
-  showRutPerkecamatanAll(message.data.idKecamatan).then((res) => {
-    RutPetani.insertMany(res).then()
+  console.log(message.data.idDesa)
+  showRutPerkecamatanAll(message.data.idDesa).then((res) => {
+    RutPetani.insertMany(res).then(() => {
+      console.log('data berhasil di input')
+    })
     // console.log(res)
   })
 }
 
-const showRutPerkecamatanAll = (idKecamatan) =>
+const showRutPerkecamatanAll = (idDesa) =>
   new Promise(async (resolve, reject) => {
     const tahunSekarang = new Date().getFullYear();
     RutModel
     .aggregate([
       {
-        $match: { idKecamatan: idKecamatan }
+        $match: { idDesa: idDesa }
       },
       {
         $lookup: {
@@ -26,14 +28,13 @@ const showRutPerkecamatanAll = (idKecamatan) =>
       },
       {
         $lookup: {
-          from: "petani_testing",
-          localField: "idKecamatan",
-          foreignField: "area.district_code",
+          from: "petanis",
+          localField: "idDesa",
+          foreignField: "area.sub_district_code",
           as: "petani"
         }
       },
-      { $unwind: "$petani" },
-      { $match: { "petani.nik": "1809030106760001"} },
+    
       {
         $lookup: {
           from: "e_rdkks",
@@ -42,37 +43,37 @@ const showRutPerkecamatanAll = (idKecamatan) =>
           as: "rdkk"
         }
       },
-      { $unwind: "$rdkk"},
-      { $match: { "rdkk.year": tahunSekarang, "rdkk.status.id": 6, "rdkk.farmer_nik": "1809030106760001" } }
+      { $match: { "rdkk.year": tahunSekarang, "rdkk.status.id": 6 } }
       ])
       .then(res => {
         if (res.length > 0) {
           let mainData = res[0]
           delete mainData._id
-          // let dataPetani = mainData.petani
-          // dataPetani.splice(1, 527)
-          // let dataRDKK = mainData.rdkk
+          let dataPetani = mainData.petani
+          // dataPetani.splice(30, 527)
+          let dataRDKK = mainData.rdkk
           // let dataRUT = mainData.dataRUT
-          // delete mainData.petani
-          // delete mainData.rdkk
+          delete mainData.petani
+          delete mainData.rdkk
           let dataBaru = []
-          // dataPetani.forEach(data => {
-            let rdkk = mainData.rdkk
-            // let rdkkFinal = rdkk.length < 1 ? null : rdkk[0]
-
-            let dataPerPetani = parseData(mainData, mainData.petani, rdkk)
-            // let idKios = null
-            // let idPoktan = null
-            // if (rdkkFinal !== null) {
-              idKios = rdkk.retailer_id
-              idPoktan = rdkk.farmer_group_id
-            // }
+          dataPetani.forEach(data => {
+            let rdkk = dataRDKK.filter(r => {
+              return r.farmer_nik === data.nik
+            })
+            let rdkkFinal = rdkk.length < 1 ? null : rdkk[0]
+            let dataPerPetani = parseData(mainData, data, rdkkFinal)
+            let idKios = null
+            let idPoktan = null
+            if (rdkkFinal !== null) {
+              idKios = rdkkFinal.retailer_id
+              idPoktan = rdkkFinal.farmer_group_id
+            }
             dataBaru.push(Object.assign(dataPerPetani, {
               idKios: idKios,
-              nik: mainData.nik,
+              nik: data.nik,
               idPoktan: idPoktan
             }))
-          // })
+          })
           resolve(dataBaru)
         }
       });

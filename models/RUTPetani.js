@@ -12,6 +12,12 @@ const mongoSchema = mongoose.Schema({
       masaTanam: Number,
       status : {type: String, default: ""},
       jenisTanaman: String,
+      subTotalSaprotan: Number,
+      subTotalGarapDanPemeliharaan: Number,
+      subTotalBiayaUsahaTani: Number,
+      subPendapatanKotor: Number,
+      subPrediksiPendapatan: Number,
+      totalPerMT: Number,
       kebutuhanSaprotan: [
         {
           nama: String,
@@ -22,12 +28,11 @@ const mongoSchema = mongoose.Schema({
           subTotal: Number,
           jatahSubsidi: Number,
           jumlahNonSubsidi: Number,
-          status: String,
-          subTotalSaprotan: Number,
-          subTotalGarapDanPemeliharaan: Number,
-          subTotalBiayaUsahaTani: Number,
-          subPendapatanKotor: Number,
-          subPrediksiPendapatan: Number
+          status: {
+            type: Number,
+            default: 0
+          },
+          subTotalSaprotan: Number
         }
       ],
       garapDanPemeliharaan: [

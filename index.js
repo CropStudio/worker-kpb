@@ -22,7 +22,7 @@ async function main() {
 app.use("/static",express(path.join(__dirname,"static")));
 app.use(express.static('static'));
 
-const mongoURL = 'mongodb://petani:Kpb1245@192.168.130.251:27017/kpb';
+const mongoURL = 'mongodb://petani:Kpb1245@103.230.48.151:27017/kpb';
 
 mongoose.connect(mongoURL,{
     useCreateIndex: true,
