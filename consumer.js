@@ -4,10 +4,11 @@ exports.consume = async () => {
 
         const channel = await con.createChannel()
         channel.consume('kpb', async (msg) =>{
-            // let message = JSON.parse(msg.content)
-            // console.log(message)
+            let message = JSON.parse(msg.content)
+            // console.log(msg)
             
-            require('./controller/RutController').parse('message', channel)
+            // require('./controller/RutController').parse('1801042014', channel)
+            require('./controller/RutController').parse(message, channel)
             // channel.ack(msg)
         })
 

@@ -1,21 +1,21 @@
 const RutModel = require('../models/RUT')
 const RutPetani = require('../models/RutPetani')
 exports.parse = (message, channel) => {
-  console.log(message)
-  // message.data.idKecamatan
-  showRutPerkecamatanAll(message.data.idKecamatan).then((res) => {
-    RutPetani.insertMany(res).then(()=> {
-      console.log('berhasil input')
-    })
+  // console.log(message.data.idDesa)
+  // 1801042014
+  console.log('1801042014')
+  showRutPerkecamatanAll(message).then((res) => {
+    // RutPetani.insertMany(res).then(() => {
+    //   console.log('data berhasil di input')
+    // })
     // console.log(res)
   })
 }
 
-const showRutPerkecamatanAll = (idDesa) =>
+const showRutPerkecamatanAll = async (idDesa) =>
   new Promise(async (resolve, reject) => {
     const tahunSekarang = new Date().getFullYear();
-    try {
-      RutModel
+    RutModel
     .aggregate([
       {
         $match: { idDesa: idDesa }
@@ -44,131 +44,46 @@ const showRutPerkecamatanAll = (idDesa) =>
           as: "rdkk"
         }
       },
-      { 
-        $match: { "rdkk.year": tahunSekarang, "rdkk.status.id": 6 }
-      }
+      { $match: { "rdkk.year": tahunSekarang, "rdkk.status.id": 6 } }
       ])
       .then(res => {
-        let mainData = res[0]
-        let dataPetani = mainData.petani
-        let dataRDKK = mainData.rdkk
-
-        let dataBaru = dataPetani.map(function (data) {
-          let rdkk = dataRDKK.filter(r => {
-            return r.farmer_nik === data.nik
-          })
-          let rdkkFinal = rdkk.length < 1 ? null : rdkk[0]
-          let dataPerPetani = parseData(mainData, data, rdkkFinal)
-          let idKios = null
-          let idPoktan = null
-          if (rdkkFinal !== null) {
-            idKios = rdkkFinal.retailer_id
-            idPoktan = rdkkFinal.farmer_group_id
-          }
-          // console.log(dataPerPetani)
-
-          const mt1 = dataPerPetani.dataRUT[0]
-          const mt2 = dataPerPetani.dataRUT[1]
-          const mt3 = dataPerPetani.dataRUT[2]
-          return {
-            nik: data.nik,
-            idPenuyuluh: mainData.idPenyuluh,
-            idDesa: mainData.idDesa,
-            tahun: dataPerPetani.tahun,
-            idPoktan: idPoktan,
-            idKios: idKios,
-            dataRUT: [
-              {
-                masaTanam: mt1.masaTanam,
-                jenisTanaman: mt1.jenisTanaman,
-                subTotalSaprotan: mt1.subTotalSaprotan,
-                subTotalGarapDanPemeliharaan: mt1.subTotalGarapDanPemeliharaan,
-                subTotalBiayaUsahaTani: mt1.subTotalBiayaUsahaTani,
-                subPendapatanKotor: mt1.subPendapatanKotor,
-                subPrediksiPendapatan: mt1.subPrediksiPendapatan,
-                totalPerMT: mt1.Number,
-                kebutuhanSaprotan: getKebutuhanSaprotan(mt1.kebutuhanSaprotan),
-                garapDanPemeliharaan: getGarapDanPemeliharaan(mt1.garapDanPemeliharaan),
-                jadwalUsahaTani: Object.assign(mt1.jadwalUsahaTani, {
-                  perkiraanJumlahPanen: {
-                    gabahKeringPanen: mt1.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringPanen,
-                    gabahKeringGiling: mt1.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringGiling,
-                    beras: mt1.jadwalUsahaTani.perkiraanJumlahPanen.beras,
-                  },
-                  hasilPascaPanen: {
-                    hasilPanen: mt1.jadwalUsahaTani.hasilPascaPanen.hasilPanen,
-                    keterangan: mt1.jadwalUsahaTani.hasilPascaPanen.keterangan,
-                    pendapatanKotor: mt1.jadwalUsahaTani.hasilPascaPanen.pendapatanKotor
-                  }
-                })
-              },
-              {
-                masaTanam: mt2.masaTanam,
-                jenisTanaman: mt2.jenisTanaman,
-                subTotalSaprotan: mt2.subTotalSaprotan,
-                subTotalGarapDanPemeliharaan: mt2.subTotalGarapDanPemeliharaan,
-                subTotalBiayaUsahaTani: mt2.subTotalBiayaUsahaTani,
-                subPendapatanKotor: mt2.subPendapatanKotor,
-                subPrediksiPendapatan: mt2.subPrediksiPendapatan,
-                totalPerMT: mt2.Number,
-                kebutuhanSaprotan: getKebutuhanSaprotan(mt2.kebutuhanSaprotan),
-                garapDanPemeliharaan: getGarapDanPemeliharaan(mt2.garapDanPemeliharaan),
-                jadwalUsahaTani: Object.assign(mt1.jadwalUsahaTani, {
-                  perkiraanJumlahPanen: {
-                    gabahKeringPanen: mt2.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringPanen,
-                    gabahKeringGiling: mt2.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringGiling,
-                    beras: mt2.jadwalUsahaTani.perkiraanJumlahPanen.beras,
-                  },
-                  hasilPascaPanen: {
-                    hasilPanen: mt2.jadwalUsahaTani.hasilPascaPanen.hasilPanen,
-                    keterangan: mt2.jadwalUsahaTani.hasilPascaPanen.keterangan,
-                    pendapatanKotor: mt2.jadwalUsahaTani.hasilPascaPanen.pendapatanKotor
-                  }
-                })
-              },
-              {
-                masaTanam: mt3.masaTanam,
-                jenisTanaman: mt3.jenisTanaman,
-                subTotalSaprotan: mt3.subTotalSaprotan,
-                subTotalGarapDanPemeliharaan: mt3.subTotalGarapDanPemeliharaan,
-                subTotalBiayaUsahaTani: mt3.subTotalBiayaUsahaTani,
-                subPendapatanKotor: mt3.subPendapatanKotor,
-                subPrediksiPendapatan: mt3.subPrediksiPendapatan,
-                totalPerMT: mt3.Number,
-                kebutuhanSaprotan: getKebutuhanSaprotan(mt3.kebutuhanSaprotan),
-                garapDanPemeliharaan: getGarapDanPemeliharaan(mt3.garapDanPemeliharaan),
-                jadwalUsahaTani: Object.assign(mt1.jadwalUsahaTani, {
-                  perkiraanJumlahPanen: {
-                    gabahKeringPanen: mt3.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringPanen,
-                    gabahKeringGiling: mt3.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringGiling,
-                    beras: mt3.jadwalUsahaTani.perkiraanJumlahPanen.beras,
-                  },
-                  hasilPascaPanen: {
-                    hasilPanen: mt3.jadwalUsahaTani.hasilPascaPanen.hasilPanen,
-                    keterangan: mt3.jadwalUsahaTani.hasilPascaPanen.keterangan,
-                    pendapatanKotor: mt3.jadwalUsahaTani.hasilPascaPanen.pendapatanKotor
-                  }
-                })
-              }
-            ],
-            totalBiayaUsahaTani: dataPerPetani.totalBiayaUsahaTani,
-            pendapatanKotor: dataPerPetani.pendapatanKotor,
-            prediksiPendapatan: dataPerPetani.prediksiPendapatan,
-            totalPanen: {
-              gabahKeringPanen: dataPerPetani.totalPanen.gabahKeringPanen,
-              gabahKeringGiling: dataPerPetani.totalPanen.gabahKeringGiling,
-              beras: dataPerPetani.totalPanen.beras
+        if (res.length > 0) {
+          var mainData = res[0]
+          // console.log(mainData.dataRUT[0].jadwalUsahaTani)
+          // delete mainData._id
+          let dataPetani = mainData.petani
+          // dataPetani.splice(30, 527)
+          let dataRDKK = mainData.rdkk
+          // let dataRUT = mainData.dataRUT
+          // delete mainData.petani
+          // delete mainData.rdkk
+          
+          // let dataBaru = getDataRUTPetani(mainData, dataPetani, dataRDKK)
+          let dataBaru = []
+          for (let i = 0; i < dataPetani.length; i++) {
+            let rdkk = dataRDKK.filter(r => {
+              return r.farmer_nik === dataPetani[i].nik
+            })
+            let rdkkFinal = rdkk.length < 1 ? null : rdkk[0]
+            const dataPerPetani = parseData(mainData, dataPetani[i], rdkkFinal)
+            let idKios = null
+            let idPoktan = null
+            if (rdkkFinal !== null) {
+              idKios = rdkkFinal.retailer_id
+              idPoktan = rdkkFinal.farmer_group_id
             }
+            // console.log(dataPerPetani)
+            // dataBaru.push(dataPerPetani)
+
           }
-        })
-        resolve(dataBaru)
-      }).catch(err => {
-        console.log(err)
-      })
-    } catch (error) {
-      console.log(error)
-    }
-  })
+
+          // console.log(dataPetani.length)
+          resolve(dataBaru)
+        } else {
+          console.log('tidak ada data')
+        }
+      });
+  });
 
   const getKebutuhanSaprotan = (arr) => {
     let data =  arr.map(res => {
@@ -200,7 +115,6 @@ const showRutPerkecamatanAll = (idDesa) =>
 
   const getLuasLahanPerMT = (data, mainData) => {
     let luasLahan
-    console.log(mainData.petani.luas_tanah)
     if (mainData.petani.luas_tanah === undefined) {
       luasLahan = 0
     } else {
@@ -214,7 +128,6 @@ const showRutPerkecamatanAll = (idDesa) =>
     }
     return Number(luasLahan)
   }
-
   const getJatahSubsidi = (jenisPupuk, masaTanam, mainData) => {
     let jatah = 0
     if (mainData.rdkk === null) {
@@ -276,9 +189,128 @@ const showRutPerkecamatanAll = (idDesa) =>
     }
   }
 
-  const parseData = (mainData, dataPetani, rdkk) => {
-    mainData.petani = dataPetani
-    mainData.rdkk = rdkk
+  const getDataRUTPetani = async (mainData, dataPetani, dataRDKK) => {
+    return await dataPetani.map(function (data) {
+      console.log(mainData.dataRUT[0].jadwalUsahaTani.hasilPascaPanen)
+      let rdkk = dataRDKK.filter(r => {
+        return r.farmer_nik === data.nik
+      })
+      let rdkkFinal = rdkk.length < 1 ? null : rdkk[0]
+      let dataPerPetani = parseData(mainData, data, rdkkFinal)
+      let idKios = null
+      let idPoktan = null
+      if (rdkkFinal !== null) {
+        idKios = rdkkFinal.retailer_id
+        idPoktan = rdkkFinal.farmer_group_id
+      }
+      // console.log(dataPerPetani)
+      // dataBaru.push(dataPerPetani)
+      // return data.nik
+      // return dataPerPetani
+      // return parseData(mainData, data, rdkkFinal)
+      const mt1 = dataPerPetani.dataRUT[0]
+      const mt2 = dataPerPetani.dataRUT[1]
+      const mt3 = dataPerPetani.dataRUT[2]
+      return {
+        nik: data.nik,
+        idPenuyuluh: mainData.idPenyuluh,
+        idDesa: mainData.idDesa,
+        tahun: dataPerPetani.tahun,
+        idPoktan: idPoktan,
+        idKios: idKios,
+        dataRUT: [
+          {
+            masaTanam: mt1.masaTanam,
+            jenisTanaman: mt1.jenisTanaman,
+            subTotalSaprotan: mt1.subTotalSaprotan,
+            subTotalGarapDanPemeliharaan: mt1.subTotalGarapDanPemeliharaan,
+            subTotalBiayaUsahaTani: mt1.subTotalBiayaUsahaTani,
+            subPendapatanKotor: mt1.subPendapatanKotor,
+            subPrediksiPendapatan: mt1.subPrediksiPendapatan,
+            totalPerMT: mt1.Number,
+            kebutuhanSaprotan: getKebutuhanSaprotan(mt1.kebutuhanSaprotan),
+            garapDanPemeliharaan: getGarapDanPemeliharaan(mt1.garapDanPemeliharaan),
+            jadwalUsahaTani: Object.assign(mt1.jadwalUsahaTani, {
+              perkiraanJumlahPanen: {
+                gabahKeringPanen: mt1.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringPanen,
+                gabahKeringGiling: mt1.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringGiling,
+                beras: mt1.jadwalUsahaTani.perkiraanJumlahPanen.beras,
+              },
+              hasilPascaPanen: {
+                hasilPanen: mt1.jadwalUsahaTani.hasilPascaPanen.hasilPanen,
+                keterangan: mt1.jadwalUsahaTani.hasilPascaPanen.keterangan,
+                pendapatanKotor: mt1.jadwalUsahaTani.hasilPascaPanen.pendapatanKotor
+              }
+            })
+          },
+          {
+            masaTanam: mt2.masaTanam,
+            jenisTanaman: mt2.jenisTanaman,
+            subTotalSaprotan: mt2.subTotalSaprotan,
+            subTotalGarapDanPemeliharaan: mt2.subTotalGarapDanPemeliharaan,
+            subTotalBiayaUsahaTani: mt2.subTotalBiayaUsahaTani,
+            subPendapatanKotor: mt2.subPendapatanKotor,
+            subPrediksiPendapatan: mt2.subPrediksiPendapatan,
+            totalPerMT: mt2.Number,
+            kebutuhanSaprotan: getKebutuhanSaprotan(mt2.kebutuhanSaprotan),
+            garapDanPemeliharaan: getGarapDanPemeliharaan(mt2.garapDanPemeliharaan),
+            jadwalUsahaTani: Object.assign(mt1.jadwalUsahaTani, {
+              perkiraanJumlahPanen: {
+                gabahKeringPanen: mt2.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringPanen,
+                gabahKeringGiling: mt2.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringGiling,
+                beras: mt2.jadwalUsahaTani.perkiraanJumlahPanen.beras,
+              },
+              hasilPascaPanen: {
+                hasilPanen: mt2.jadwalUsahaTani.hasilPascaPanen.hasilPanen,
+                keterangan: mt2.jadwalUsahaTani.hasilPascaPanen.keterangan,
+                pendapatanKotor: mt2.jadwalUsahaTani.hasilPascaPanen.pendapatanKotor
+              }
+            })
+          },
+          {
+            masaTanam: mt3.masaTanam,
+            jenisTanaman: mt3.jenisTanaman,
+            subTotalSaprotan: mt3.subTotalSaprotan,
+            subTotalGarapDanPemeliharaan: mt3.subTotalGarapDanPemeliharaan,
+            subTotalBiayaUsahaTani: mt3.subTotalBiayaUsahaTani,
+            subPendapatanKotor: mt3.subPendapatanKotor,
+            subPrediksiPendapatan: mt3.subPrediksiPendapatan,
+            totalPerMT: mt3.Number,
+            kebutuhanSaprotan: getKebutuhanSaprotan(mt3.kebutuhanSaprotan),
+            garapDanPemeliharaan: getGarapDanPemeliharaan(mt3.garapDanPemeliharaan),
+            jadwalUsahaTani: Object.assign(mt1.jadwalUsahaTani, {
+              perkiraanJumlahPanen: {
+                gabahKeringPanen: mt3.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringPanen,
+                gabahKeringGiling: mt3.jadwalUsahaTani.perkiraanJumlahPanen.gabahKeringGiling,
+                beras: mt3.jadwalUsahaTani.perkiraanJumlahPanen.beras,
+              },
+              hasilPascaPanen: {
+                hasilPanen: mt3.jadwalUsahaTani.hasilPascaPanen.hasilPanen,
+                keterangan: mt3.jadwalUsahaTani.hasilPascaPanen.keterangan,
+                pendapatanKotor: mt3.jadwalUsahaTani.hasilPascaPanen.pendapatanKotor
+              }
+            })
+          }
+        ],
+        totalBiayaUsahaTani: dataPerPetani.totalBiayaUsahaTani,
+        pendapatanKotor: dataPerPetani.pendapatanKotor,
+        prediksiPendapatan: dataPerPetani.prediksiPendapatan,
+        totalPanen: {
+          gabahKeringPanen: dataPerPetani.totalPanen.gabahKeringPanen,
+          gabahKeringGiling: dataPerPetani.totalPanen.gabahKeringGiling,
+          beras: dataPerPetani.totalPanen.beras
+        }
+      }
+    })
+  }
+
+  const parseData = (dataUtama, dataPetani, rdkk) => {
+      // mainData.petani = dataPetani
+      let mainData = dataUtama
+      Object.assign(mainData, {
+        petani: dataPetani
+      })
+      mainData.rdkk = rdkk
           let dataRUT = mainData.dataRUT
           let totalSaprotan = 0
           let totalGarapDanPemeliharaan = 0
@@ -320,8 +352,7 @@ const showRutPerkecamatanAll = (idDesa) =>
                 hargaSubsidi: hargaSubsidi,
                 subTotal: totalBiayaPerPupuk,
                 jatahSubsidi: jatahSubsidi,
-                jumlahNonSubsidi: jumlahNonSubsidi < 0 ? 0 : jumlahNonSubsidi,
-                luasLahan: luasLahan
+                jumlahNonSubsidi: jumlahNonSubsidi < 0 ? 0 : jumlahNonSubsidi
               })
             
               totalPerMT += totalBiayaPerPupuk
@@ -354,12 +385,12 @@ const showRutPerkecamatanAll = (idDesa) =>
             totalPanen.beras += berasPerMT
             let subTotalBiayaUsahaTani = totalPerMT + subTotalGarapDanPemeliharaan
             Object.assign(data, {
+              luasLahan: luasLahan,
               subTotalSaprotan: totalPerMT,
               subTotalGarapDanPemeliharaan: subTotalGarapDanPemeliharaan,
               subTotalBiayaUsahaTani: subTotalBiayaUsahaTani,
               subPendapatanKotor: pendapatanKotorPerMT,
-              subPrediksiPendapatan: pendapatanKotorPerMT - subTotalBiayaUsahaTani,
-              totalPerMT: subTotalBiayaUsahaTani
+              subPrediksiPendapatan: pendapatanKotorPerMT - subTotalBiayaUsahaTani
             })
           })
           mainData.pendapatanKotor = pendapatanKotor
@@ -368,10 +399,11 @@ const showRutPerkecamatanAll = (idDesa) =>
           Object.assign(mainData, {
             totalSaprotan: totalSaprotan,
             totalGarapDanPemeliharaan: totalGarapDanPemeliharaan,
-            totalPanen: totalPanen,
-            nik: dataPetani.nik
+            totalPanen: totalPanen
           })
           // delete mainData.rdkk
           // delete mainData.petani
+          // console.log(mainData.dataRUT[0])
+          // resolve(mainData)
           return mainData
-  }
+        }

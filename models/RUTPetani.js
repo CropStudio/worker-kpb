@@ -80,5 +80,5 @@ const mongoSchema = mongoose.Schema({
     gabahKeringGiling: Number,
     beras: Number
   }
-});
+})
 module.exports = mongoose.model("rutpetani", mongoSchema);
